@@ -1,23 +1,45 @@
 import { Layout } from "antd";
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import MapView from "./partials/MapView";
 import Filters from "./partials/Filters";
 import Places from "./partials/PlaceViews/Places";
 import PlacesDetail from "./partials/PlaceViews/PlaceDetail/PlacesDetail";
 import { usePlaceContenxt } from "@aroma/store/usePlaceContext";
+import { useAllRatings } from "@aroma/hooks/useAllRatings";
+
+export interface FilterState {
+  rating: number;
+  category: string | null;
+  keyword: string;
+}
 
 function Home() {
   const ctxPlaces = usePlaceContenxt();
+
+  const scrollablePlacesRef = useRef<HTMLDivElement>(null);
 
   const places = ctxPlaces.places;
   const { lat, lng } = ctxPlaces.mePosition;
   const loadingPoss = ctxPlaces.isLoadingPoss;
 
+  const ratings = useAllRatings()
+
   const [selectedMap, setSelectedMap] = useState<number | null>(null);
   const [flyToTrigger, setFlyToTrigger] = useState<[number, number] | null>(
     null
   );
+  const [filter, setFilter] = useState<FilterState>({
+    rating: 0,
+    category: null,
+    keyword: "",
+  });
 
   const dummyPosition = {
     lat: -6.9446311,
@@ -42,6 +64,21 @@ function Home() {
     [places]
   );
 
+  const filteredPlaces = useMemo(() => {
+    return ctxPlaces.places.filter((place) => {
+      const placesRating = ratings[place.id]?.average ?? 0
+
+      const matchesRating = placesRating >= filter.rating;
+      const matchesCategory = filter.category
+        ? place.type === filter.category
+        : true;
+      const matchesKeyword = place.name
+        .toLowerCase()
+        .includes(filter.keyword.toLowerCase());
+      return matchesRating && matchesCategory && matchesKeyword;
+    });
+  }, [ctxPlaces.places, filter]);
+
   const onDeleteSelectedMap = () => {
     setSelectedMap(null);
   };
@@ -55,8 +92,11 @@ function Home() {
   return (
     <Layout style={{ height: "100vh" }}>
       <div className="flex h-full overflow-hidden">
-        <div className="w-[500px] flex items-center flex-col gap-y-8 overflow-y-scroll">
-          {!selectedMap && <Filters />}
+        <div
+          className="w-[500px] flex items-center flex-col gap-y-8 overflow-y-scroll"
+          ref={scrollablePlacesRef}
+        >
+          {!selectedMap && <Filters filter={filter} setFilter={setFilter} />}
           {selectedMap ? (
             <PlacesDetail
               places={places}
@@ -64,7 +104,11 @@ function Home() {
               onDeleteSelectedMap={onDeleteSelectedMap}
             />
           ) : (
-            <Places selectMapHandler={selectMapHandler} />
+            <Places
+              selectMapHandler={selectMapHandler}
+              filteredPlaces={filteredPlaces}
+              scrollContainerRef={scrollablePlacesRef}
+            />
           )}
         </div>
         <MapView

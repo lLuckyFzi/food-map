@@ -29,6 +29,8 @@ const PlacesDetail = React.memo(function PlacesDetail(
 
   const placeDetail = places.find((d) => d.id === placeId);
 
+  const commentsIsEmpty = comments.length > 0 
+
   return (
     <div className="flex flex-col p-3 gap-y-4">
       <div className="overflow-hidden rounded-2xl relative">
@@ -36,7 +38,9 @@ const PlacesDetail = React.memo(function PlacesDetail(
           type="text"
           className="absolute top-5 left-7"
           icon={<BsArrowLeft className="w-8 h-8 text-white" />}
-          onClick={onDeleteSelectedMap}
+          onClick={() => {
+            onDeleteSelectedMap();
+          }}
         />
         <Image
           alt="img-list"
@@ -62,7 +66,7 @@ const PlacesDetail = React.memo(function PlacesDetail(
           <div className="flex gap-x-4 items-center">
             <FaLocationDot className="text-gray-600 w-4 h-4" />
             <Typography className="text-gray-600 text-lg">
-              Jl. Sangkali
+              {placeDetail?.address || "Address"}
             </Typography>
           </div>
         </div>
@@ -114,7 +118,7 @@ const PlacesDetail = React.memo(function PlacesDetail(
             </Typography>
           </div>
           <div className="flex flex-col gap-y-5 my-8">
-            {comments.map((d) => {
+            {commentsIsEmpty ? comments.map((d) => {
               return (
                 <CommentCard
                   key={d.id}
@@ -122,8 +126,16 @@ const PlacesDetail = React.memo(function PlacesDetail(
                   comments={d}
                 />
               );
-            })}
-            <div className="w-full">
+            }) : <Typography>Be the one in the comment!</Typography>}
+            <div className="w-full mt-9">
+              <div>
+                <Typography
+                  font="playfair_display"
+                  className="text-2xl font-semibold"
+                >
+                  Add Your Comment
+                </Typography>
+              </div>
               <CommentForm placeId={placeId} />
             </div>
           </div>

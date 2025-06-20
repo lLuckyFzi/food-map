@@ -22,7 +22,7 @@ export async function fetchNearbyPlaces(
   lng: number,
   type: ModelPlaceType
 ): Promise<PlaceDataModel[]> {
-  const radius = 4000;
+  const radius = 10000;
 
   let query = `
     [out:json];
