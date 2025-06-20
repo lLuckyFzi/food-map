@@ -1,16 +1,18 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { PlaceDataModel } from "../../data/PlaceDataTemp";
 import PlaceCard from "../PlaceCard";
-import { message } from "antd";
+import { message, Pagination } from "antd";
 import { usePlaceContenxt } from "@aroma/store/usePlaceContext";
 import { useAllRatings } from "@aroma/hooks/useAllRatings";
 
 interface PlacesProps {
+  filteredPlaces: PlaceDataModel[];
+  scrollContainerRef: React.RefObject<HTMLDivElement>;
   selectMapHandler: (id: null | number) => void;
 }
 
 function Places(props: PlacesProps) {
-  const { selectMapHandler } = props;
+  const { selectMapHandler, filteredPlaces, scrollContainerRef } = props;
 
   const ctxPlaces = usePlaceContenxt();
   const places = ctxPlaces.places;
@@ -18,8 +20,13 @@ function Places(props: PlacesProps) {
   const ratings = useAllRatings();
 
   const [myBookmark, setMyBookmark] = useState<PlaceDataModel[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
-  // console.log("Bookmark: ", myBookmark);
+  const paginatedPlaces = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredPlaces.slice(start, start + pageSize);
+  }, [filteredPlaces, currentPage]);
 
   const addBookmark = useCallback(
     (data: PlaceDataModel) => {
@@ -45,7 +52,7 @@ function Places(props: PlacesProps) {
   );
 
   const renderedPlaces = useMemo(() => {
-    return places.map((d: PlaceDataModel) => {
+    return paginatedPlaces.map((d: PlaceDataModel) => {
       const ratingData = ratings[d.id];
       return (
         <PlaceCard
@@ -54,15 +61,38 @@ function Places(props: PlacesProps) {
           rating={ratingData ? ratingData.average : 0}
           myBookmark={myBookmark}
           onAddBookmark={addBookmark}
-          onSelectMapHandler={selectMapHandler}
+          onSelectMapHandler={(id) => {
+            scrollContainerRef.current?.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            });
+            selectMapHandler(id);
+          }}
         />
       );
     });
-  }, [places, myBookmark, addBookmark, selectMapHandler, ratings]);
+  }, [paginatedPlaces, myBookmark, addBookmark, selectMapHandler, ratings]);
 
   return (
     <div className="flex flex-col gap-y-8 w-full px-6 mb-6">
       {renderedPlaces}
+      {filteredPlaces.length > pageSize && (
+        <div className="flex justify-center mt-4">
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={filteredPlaces.length}
+            onChange={(page) => {
+              setCurrentPage(page);
+              scrollContainerRef.current?.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              });
+            }}
+            showSizeChanger={false}
+          />
+        </div>
+      )}
     </div>
   );
 }

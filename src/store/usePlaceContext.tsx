@@ -38,7 +38,7 @@ export function PlacesProvider(props: { children: ReactNode }) {
   const [placeType, setPlaceType] = useState<ModelPlaceType>("all");
   const [places, setPlaces] = useState<PlaceDataModel[]>([]);
 
-  const refreshPlaces = useCallback(async() => {
+  const refreshPlaces = useCallback(async () => {
     if (mePosition.lat && mePosition.lng) {
       try {
         const fetched = await fetchNearbyPlaces(
@@ -56,8 +56,30 @@ export function PlacesProvider(props: { children: ReactNode }) {
 
   useEffect(() => {
     if (!navigator.geolocation) {
+      console.log("Geolocation not supported");
+      setIsLoadingPoss(false);
       return;
     }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setMePosition({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+        setIsLoadingPoss(false);
+      },
+      (err) => {
+        console.log("getCurrentPosition error:", err.code, err.message);
+        setMePosition({ lat: -6.914744, lng: 107.60981 }); // fallback
+        setIsLoadingPoss(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      }
+    );
 
     const watch = navigator.geolocation.watchPosition(
       async (pos) => {
@@ -69,11 +91,12 @@ export function PlacesProvider(props: { children: ReactNode }) {
       },
       (err) => {
         console.log("err watch geolocation:", err);
+        setMePosition({ lat: -6.914744, lng: 107.60981 });
         setIsLoadingPoss(false);
       },
       {
         enableHighAccuracy: true,
-        timeout: 5000,
+        timeout: 15000,
         maximumAge: 0,
       }
     );
