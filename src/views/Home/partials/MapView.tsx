@@ -2,6 +2,7 @@ import { Spin } from "antd";
 import dynamic from "next/dynamic";
 import React from "react";
 import { PlaceDataModel } from "../data/PlaceDataTemp";
+import { usePlaceContenxt } from "@aroma/store/usePlaceContext";
 
 const MapComponent = dynamic(
   () => import("@aroma/components/Leaftlet/MapLeaflet"),
@@ -22,9 +23,10 @@ interface MapViewProps {
   places: PlaceDataModel[];
   selectMapHandler: (id: null | number) => void;
   mapCenter: { lat: number | null; lng: number | null };
-  setMapCenter: React.Dispatch<
-    React.SetStateAction<{ lat: number; lng: number }>
-  >;
+  setMapCenter: React.Dispatch<React.SetStateAction<{
+    lat: number | null;
+    lng: number | null;
+}>>
   flyToTrigger: [number, number] | null;
   clearTrigger: () => void;
 }
@@ -42,11 +44,14 @@ function MapView(props: MapViewProps) {
     clearTrigger,
   } = props;
 
+  const ctxPlaces = usePlaceContenxt()
+  const isPositionReady = ctxPlaces.isPositionReady
+
   const { lat, lng } = mePosition;
 
   return (
     <div className="flex-1 h-screen justify-center items-center flex relative">
-      {isLoadingPoss ? (
+      {isLoadingPoss && isPositionReady ? (
         <Spin spinning={true} tip="Mencari lokasi anda" />
       ) : (
         <MapComponent

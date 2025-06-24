@@ -7,8 +7,11 @@ import { Button, Form, Input, message, Spin, Typography } from "antd";
 
 import { auth } from "@aroma/lib/firebase";
 import { signInWithGoogleAndSyncUser } from "@aroma/services/firebase-auth";
+import { useRouter } from "next/router";
 
 function LoginForm() {
+  const router = useRouter()
+
   const [isLoading, setIsLoading] = useState(false);
   const [form] = Form.useForm();
 
@@ -24,6 +27,7 @@ function LoginForm() {
       message.success({
         content: "Login Berhasil",
       });
+      router.push("/")
     } catch (error) {
       console.log(error);
       message.error({

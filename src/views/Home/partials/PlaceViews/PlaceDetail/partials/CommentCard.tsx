@@ -26,7 +26,7 @@ function CommentCard(props: CommentCardProps) {
           <Typography className="text-2xl font-medium">
             {comments.name || "Name"}
           </Typography>
-          <Rating rate={4} className="text-gray-600" />
+          <Rating rate={comments.rating} className="text-gray-600" />
         </div>
       </div>
       <Typography>{comments.comment || "Comment"}</Typography>

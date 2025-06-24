@@ -22,9 +22,10 @@ interface MapLeafletProps {
   selectMapHandler: (id: null | number) => void;
   clearTrigger: () => void;
   mapCenter: { lat: number | null; lng: number | null };
-  setMapCenter: React.Dispatch<
-    React.SetStateAction<{ lat: number; lng: number }>
-  >;
+  setMapCenter: React.Dispatch<React.SetStateAction<{
+    lat: number | null;
+    lng: number | null;
+}>>
 }
 
 const MePositionIcon = L.icon({
@@ -35,8 +36,15 @@ const MePositionIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-const PlaceIcon = L.icon({
-  iconUrl: "/icons/user-icon.png",
+const MealIcon = L.icon({
+  iconUrl: "/icons/meal-icon.png",
+  iconSize: [32, 32],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+});
+
+const CupIcon = L.icon({
+  iconUrl: "/icons/cup-icon.png",
   iconSize: [32, 32],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -96,11 +104,13 @@ function MapLeaflet(props: MapLeafletProps) {
 
         {isPlacesReady &&
           places.map((d) => {
+            const isRestaurant = d.type === 'restaurant'
+            
             return (
               <Marker
                 key={d.id}
                 position={[d.lat, d.lng]}
-                icon={PlaceIcon}
+                icon={isRestaurant ? MealIcon : CupIcon}
                 ref={(ref) => {
                   if (ref) {
                     markersRef.current[d.id] = ref;
@@ -110,6 +120,7 @@ function MapLeaflet(props: MapLeafletProps) {
                 <MapPopUp
                   id={d.id}
                   name={d.name}
+                  type={d.type}
                   address={d.address}
                   rating={d.rating as number}
                   img={d.img}
