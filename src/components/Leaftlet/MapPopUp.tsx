@@ -10,6 +10,7 @@ interface MapPopUpProps {
   name: string;
   address: string;
   img: string;
+  type: string;
   rating: number;
   selectMapHandler: (id: null | number) => void
 }

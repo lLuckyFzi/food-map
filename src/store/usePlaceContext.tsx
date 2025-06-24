@@ -23,6 +23,7 @@ interface PlaceContextType {
   setPlaceType: (type: ModelPlaceType) => void;
   places: PlaceDataModel[];
   refreshPlaces: () => void;
+  isPositionReady: boolean;
 }
 
 const PlaceContext = createContext<PlaceContextType | undefined>(undefined);
@@ -37,6 +38,7 @@ export function PlacesProvider(props: { children: ReactNode }) {
   const [isLoadingPoss, setIsLoadingPoss] = useState(true);
   const [placeType, setPlaceType] = useState<ModelPlaceType>("all");
   const [places, setPlaces] = useState<PlaceDataModel[]>([]);
+  const [isPositionReady, setIsPositionReady] = useState(false);
 
   const refreshPlaces = useCallback(async () => {
     if (mePosition.lat && mePosition.lng) {
@@ -68,11 +70,13 @@ export function PlacesProvider(props: { children: ReactNode }) {
           lng: pos.coords.longitude,
         });
         setIsLoadingPoss(false);
+        setIsPositionReady(true);
       },
       (err) => {
         console.log("getCurrentPosition error:", err.code, err.message);
         setMePosition({ lat: -6.914744, lng: 107.60981 }); // fallback
         setIsLoadingPoss(false);
+        setIsPositionReady(true);
       },
       {
         enableHighAccuracy: true,
@@ -116,8 +120,9 @@ export function PlacesProvider(props: { children: ReactNode }) {
       setPlaceType,
       places,
       refreshPlaces,
+      isPositionReady,
     }),
-    [mePosition, isLoadingPoss, placeType, places, refreshPlaces]
+    [mePosition, isLoadingPoss, placeType, places, refreshPlaces, isPositionReady]
   );
 
   return (

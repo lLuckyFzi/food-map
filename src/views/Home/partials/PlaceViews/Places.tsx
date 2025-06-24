@@ -1,9 +1,9 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { PlaceDataModel } from "../../data/PlaceDataTemp";
 import PlaceCard from "../PlaceCard";
-import { message, Pagination } from "antd";
-import { usePlaceContenxt } from "@aroma/store/usePlaceContext";
+import { message, Pagination, Spin } from "antd";
 import { useAllRatings } from "@aroma/hooks/useAllRatings";
+import Typography from "@aroma/components/Typography";
 
 interface PlacesProps {
   filteredPlaces: PlaceDataModel[];
@@ -13,9 +13,6 @@ interface PlacesProps {
 
 function Places(props: PlacesProps) {
   const { selectMapHandler, filteredPlaces, scrollContainerRef } = props;
-
-  const ctxPlaces = usePlaceContenxt();
-  const places = ctxPlaces.places;
 
   const ratings = useAllRatings();
 
@@ -27,6 +24,8 @@ function Places(props: PlacesProps) {
     const start = (currentPage - 1) * pageSize;
     return filteredPlaces.slice(start, start + pageSize);
   }, [filteredPlaces, currentPage]);
+
+  const isDataPlaceReady = paginatedPlaces?.length > 0;
 
   const addBookmark = useCallback(
     (data: PlaceDataModel) => {
@@ -75,7 +74,13 @@ function Places(props: PlacesProps) {
 
   return (
     <div className="flex flex-col gap-y-8 w-full px-6 mb-6">
-      {renderedPlaces}
+      {isDataPlaceReady ? (
+        renderedPlaces
+      ) : (
+        <div className="flex items-center justify-center w-full">
+          <Typography>No Data</Typography>
+        </div>
+      )}
       {filteredPlaces.length > pageSize && (
         <div className="flex justify-center mt-4">
           <Pagination

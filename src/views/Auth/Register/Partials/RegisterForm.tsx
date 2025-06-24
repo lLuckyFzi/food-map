@@ -1,7 +1,7 @@
 import { auth, db } from "@aroma/lib/firebase";
 import { Button, Form, Input, message, Spin } from "antd";
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 

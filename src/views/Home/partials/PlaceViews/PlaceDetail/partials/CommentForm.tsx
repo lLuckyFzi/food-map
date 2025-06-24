@@ -1,5 +1,5 @@
 import { Form, Input, Button, Rate, message } from "antd";
-import { db } from "@aroma/lib/firebase";
+import { auth, db } from "@aroma/lib/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
 interface CommentFormProps {
@@ -11,9 +11,16 @@ function CommentForm({ placeId }: CommentFormProps) {
 
   const onFinish = async (values: any) => {
     try {
+      const user = auth.currentUser;
+
+      if (!user) {
+        message.error("Kamu harus login untuk memberi komentar.");
+        return;
+      }
+
       await addDoc(collection(db, "comments"), {
         placeId,
-        name: values.name,
+        name: user.displayName ?? user.email ?? "Unknown User",
         comment: values.comment,
         rating: values.rating,
         createdAt: serverTimestamp(),
@@ -30,18 +37,11 @@ function CommentForm({ placeId }: CommentFormProps) {
     <div className="my-6">
       <Form form={form} layout="vertical" onFinish={onFinish}>
         <Form.Item
-          label="Your Name"
-          name="name"
-          rules={[{ required: true, message: "Please enter your name" }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
           label="Your Comment"
           name="comment"
           rules={[{ required: true, message: "Please enter your comment" }]}
         >
-          <Input.TextArea rows={4} />
+          <Input.TextArea rows={4} placeholder="Tempat nya sangat enak!" />
         </Form.Item>
         <Form.Item
           label="Rating"
@@ -50,8 +50,8 @@ function CommentForm({ placeId }: CommentFormProps) {
         >
           <Rate />
         </Form.Item>
-        <Form.Item>
-          <Button type="primary" htmlType="submit" className="bg-blue-500">
+        <Form.Item className="w-full">
+          <Button type="primary" htmlType="submit" className="bg-blue-500 w-full">
             Submit Comment
           </Button>
         </Form.Item>

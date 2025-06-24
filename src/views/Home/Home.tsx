@@ -28,8 +28,9 @@ function Home() {
   const places = ctxPlaces.places;
   const { lat, lng } = ctxPlaces.mePosition;
   const loadingPoss = ctxPlaces.isLoadingPoss;
+  const isPositionReady = ctxPlaces.isPositionReady;
 
-  const ratings = useAllRatings()
+  const ratings = useAllRatings();
 
   const [selectedMap, setSelectedMap] = useState<number | null>(null);
   const [flyToTrigger, setFlyToTrigger] = useState<[number, number] | null>(
@@ -46,9 +47,10 @@ function Home() {
     lng: 107.6495019,
   };
 
-  const [mapCenter, setMapCenter] = useState(() => {
-    return lat !== null && lng !== null ? { lat, lng } : dummyPosition;
-  });
+  const [mapCenter, setMapCenter] = useState<{
+    lat: number | null;
+    lng: number | null;
+  }>({ lat: null, lng: null });
 
   const selectMapHandler = useCallback(
     (id: null | number) => {
@@ -65,8 +67,8 @@ function Home() {
   );
 
   const filteredPlaces = useMemo(() => {
-    return ctxPlaces.places.filter((place) => {
-      const placesRating = ratings[place.id]?.average ?? 0
+    return places.filter((place) => {
+      const placesRating = ratings[place.id]?.average ?? 0;
 
       const matchesRating = placesRating >= filter.rating;
       const matchesCategory = filter.category
@@ -77,17 +79,50 @@ function Home() {
         .includes(filter.keyword.toLowerCase());
       return matchesRating && matchesCategory && matchesKeyword;
     });
-  }, [ctxPlaces.places, filter]);
+  }, [places, filter]);
+
+  const placesWithRating = useMemo(() => {
+    return places.map((d) => {
+      const ratingData = ratings[d.id]
+      return {
+        ...d,
+        rating: ratingData?.average ?? 0,
+      }
+    })
+  }, [places, ratings])
 
   const onDeleteSelectedMap = () => {
     setSelectedMap(null);
   };
 
+  const mountPosition =
+    loadingPoss ||
+    lat === null ||
+    lng === null ||
+    mapCenter.lat === null ||
+    mapCenter.lng === null;
+
   useEffect(() => {
-    if (lat !== null && lng !== null) {
+    const isReady =
+      isPositionReady &&
+      lat !== null &&
+      lng !== null &&
+      mapCenter.lat === null &&
+      mapCenter.lng === null;
+
+    if (isReady) {
       setMapCenter({ lat, lng });
+      setFlyToTrigger([lat, lng]);
     }
-  }, [lat, lng]);
+  }, [isPositionReady, lat, lng, mapCenter]);
+
+  if (mountPosition) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center">
+        <p className="text-lg">Menentukan posisi Anda...</p>
+      </div>
+    );
+  }
 
   return (
     <Layout style={{ height: "100vh" }}>
@@ -115,7 +150,7 @@ function Home() {
           mapCenter={mapCenter}
           setMapCenter={setMapCenter}
           isLoadingPoss={loadingPoss}
-          places={places}
+          places={placesWithRating}
           mePosition={{ lat, lng }}
           selectMapHandler={selectMapHandler}
           flyToTrigger={flyToTrigger}
